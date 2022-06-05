@@ -1,15 +1,20 @@
 from flask_sqlalchemy import SQLAlchemy
+from flask_login import UserMixin
 
 db = SQLAlchemy()
 
-class User(db.Model):
-    id = db.column(db.Integer, primary_key=True)
-    username = db.column(db.String(255), unique=True)
-    password = db.column(db.String(255), unique=True)
+def init_app(app):
+    db.app = app
+    db.init_app(app)
+
+class User(db.Model, UserMixin):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(255), unique=True)
+    password = db.Column(db.String(255), unique=True)
     is_admin = db.Column(db.Boolean)
     api_key = db.Column(db.String(255), unique=True,nullable=True)
     is_active = db.Column(db.Boolean, default=True)
-    authenticated = db.column(db.Boolean, default=False)
+    authenticated = db.Column(db.Boolean, default=False)
 
     def __repr__(self):
         return f'<user {self.id} {self.username}>'
