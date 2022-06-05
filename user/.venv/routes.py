@@ -1,9 +1,15 @@
-from flask import Blueprint, jsonify, request
+import flask_login
+from flask import Blueprint, jsonify, request, make_response, g
 from models import db, User
+from flask_login import LoginManager, login_user, current_user, logout_user, user_loaded_from_request
 from werkzeug.security import generate_password_hash, check_password_hash
+
+login_manager = LoginManager()
+
 user_blueprint = Blueprint('user_api_routes',
                            __name__,
                            url_prefix='/api/user')
+
 
 @user_blueprint.route('/all', methods=['GET'])
 def get_all_users():
@@ -32,8 +38,48 @@ def create_user():
         response = {'message': 'Error in creating response'}
     return jsonify(response)
 
+@user_blueprint.route('/login', methods=['POST'])
+def login():
+    username = request.form['username']
+    password = request.form['password']
 
+    user = User.query.filter_by(username=username).first()
+    if not user:
+        return make_response(jsonify({'message':'username or password does not exist'}), 401)
+    if check_password_hash(user.password, password):
+        user.update_api_key()
+        db.session.commit()
+        login_user(user)
+        response = {'message':'logged in ', 'api_key': user.api_key}
+        return make_response(jsonify(response), 200)
+    return make_response(jsonify({'message':'Access denied'}), 401)
 
+@user_blueprint.route('/logout', methods=['POST'])
+def logout():
+    if current_user.is_authenticated:
+        logout_user()
+        return jsonify({'message':'log out'})
+    return jsonify({'message':'No user logged in'}), 401
+
+@user_blueprint.route('/<username>/exists')
+def user_exists(username):
+    user = User.query.filter_by(username=username).first()
+    if user:
+        return jsonify({"result":True}), 200
+    return jsonify({"result":False}), 404
+
+@user_blueprint.route('/', methods=['GET'])
+def get_current_user():
+    if current_user.is_authenticated:
+        return jsonify({"result": current_user.serialize()}), 200
+    return jsonify({'message':'User not logged in'}), 401
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.get(user_id)
 
 def index():
     return "hello"
+
+
+
