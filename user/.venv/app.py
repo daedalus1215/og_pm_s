@@ -1,9 +1,10 @@
 from flask import Flask
-from flask_migrate import Migrate
+from flask.sessions import SecureCookieSessionInterface
 from flask_login import LoginManager
+from flask_migrate import Migrate
+
 import models
 from routes import user_blueprint
-from flask.sessions import SecureCookieSessionInterface
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'vZK7siKrV8BL46KsyAIPoQ'
@@ -13,7 +14,6 @@ models.init_app(app)
 app.register_blueprint(user_blueprint)
 login_manager = LoginManager(app)
 migrate = Migrate(app, models.db)
-
 
 
 @login_manager.request_loader
@@ -40,8 +40,10 @@ def load_user_from_request(request):
     # finally, return None if both methods did not login the user
     return None
 
+
 class CustomSessionInterface(SecureCookieSessionInterface):
     """Prevent creating session from API requests."""
+
     def save_session(self, *args, **kwargs):
         if g.get('login_via_request'):
             return

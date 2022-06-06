@@ -1,6 +1,13 @@
 from flask_sqlalchemy import SQLAlchemy
 
-db=SQLAlchemy()
+db = SQLAlchemy()
+
+
+# Connect the database to the Flask App
+def init_app(app):
+    db.app = app
+    db.init_app(app)
+
 
 class Book(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -10,7 +17,7 @@ class Book(db.Model):
     image = db.Column(db.String(255))
 
     def __repr__(self):
-        return f'<book {self.id} {self.name}'
+        return f'<book {self.id} {self.name}>'
 
     def serialize(self):
         return {
