@@ -2,3 +2,5 @@ lib/*
 user/.venv/lib/*
 book/.book_venv/lib/*
 book/.book_venv/include/*
+order/.order_venv/include/*
+order/.order_venv/lib/*
